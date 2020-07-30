@@ -1,0 +1,966 @@
+---
+mandatory: True
+code: |
+  intro_screen
+  complaint_date
+  user.name.first
+  user.birth_surname_different
+  user.address.address
+  user.address.geolocate()
+  user.phone_number
+  user.sex_female
+  user.ssn
+  defendant.name.first
+  defendant.sex_female
+  defendant.ssn
+  if not still_live_together: 
+    if knows_spouse_lives:
+      defendant.address.address
+    else:
+      defendant.address.address
+    defendant.address.geolocate()
+  marriage_date
+  marriage_city
+  breakdown_date
+  grant_divorce    
+  if children.there_are_any == True:
+    grant_custody
+    children.gather()
+  grant_support
+  plaintiff_liberty
+  resume_former_name
+  convey_real_estate
+  other_relief
+---
+code: |
+  all_children = DALlist('all_children', elements=[child for child in children if   child.age_in_years() < 18])
+---
+code: |
+  dependent_children = children.filter('dependent_children', dependent=True)
+---
+code: |
+  if complaint_date['date_today']:
+    today()
+---
+features:
+  progress bar: True
+---
+features:
+  default date min: "1905-01-01"
+  default date max: "2060-12-31"
+---
+objects:
+- user: Individual
+- defendant: Individual
+---
+metadata:
+  title: |
+    1B Divorce
+  short title: |
+    Divorce
+  description: |
+    This interview produces a Complaint for Divorce, filed by one of the spouses           in1B_Template_PDF.pdfdually.
+  authors:
+    - name: Melina L. Munoz Turco
+      organization: JusticeApp, Inc.
+  revision_date: 2020-04-01
+---
+question: |
+  Welcome to the JusticeApp form builder for a 1B Divorce! To use this form builder, you must agree that:
+  
+  ##
+  - Use of this form builder **does not create an attorney-client relationship**;
+  
+  - JusticeApp is **not giving you any legal advice**; 
+  
+  - If you want to speak to a lawyer, you can click on "Legal Help" in JusticeApp for help finding one;
+  
+  - This form builder can be used if you believe your marriage has suffered an **“irretrievable breakdown”**. This means your marriage is broken and you cannot fix it.
+  
+right: |
+  To learn more about this type of divorce and the process, you can vist [MassLegalHelp](https://www.masslegalhelp.org/children-and-families/divorce).
+  
+  You may want to especially learn more about:
+  
+  1. If this is the **type of divorce** you want to file. 
+  
+  2. **Service**, which is you need to do to tell your spouse that you have started this case;
+  
+  3. The **Parent Education** course, which you may have to complete if you have had children during the marriage;
+  
+  4. **How long** it will take for this divorce.
+  
+  5. Any **costs** for this divorce and if you may qualify for a **fee waiver**.
+
+help: |
+  To learn more about whether this type of divorce is best for you, how long this divorce will take, how much this divorce will cost, and the process, you can vist [MassLegalHelp](https://www.masslegalhelp.org/children-and-families/divorce).
+continue button field: intro_screen
+continue button label: Agree
+---
+question: |
+  What is your name and date of birth?
+fields:
+  - First Name: user.name.first
+  - Middle Name: user.name.middle
+    required: False
+  - Last Name: user.name.last
+    help: |
+      On marriage certificate, look for "Surname After Marriage". This is your last name.
+  - Suffix: user.name.suffix
+    required: False
+    code: |
+      name_suffix()
+  - Date of Birth: user.birthdate
+    datatype: date
+right: |
+  ### Note
+    
+  Enter your **name exactly as it appears on your marriage certificate**. 
+  
+  Under your information on your marriage certificate, look at the box or line for **"Surname After Marriage"**. This is your current last name.
+---
+question: |
+  Have you ever changed your last name (example, when you got married)?
+fields:   
+  - no label: user.birth_surname_different
+    datatype: yesnoradio
+  - Insert Last Name at Birth: user.birth_surname
+    show if:
+      variable: 
+        user.birth_surname_different
+      is:
+        True
+---
+question: |
+  What is your sex?
+fields: 
+  - Female: user.sex_female
+    datatype: yesno
+  - Male: user.sex_male
+    datatype: yesno
+  - Neither of the above/Prefer Not to Answer: user.sex_no_answer
+    datatype: yesno
+---
+question: |
+  What are the last 4 digits of your Social Security Number?
+fields: 
+  - Last 4 Digits of SSN: user.ssn
+    datatype: integer
+    required: False
+    maxlength: 4
+    minlength: 4
+---
+question: |
+  What is your address?
+fields:
+  - address: user.address.address
+    address autocomplete: True
+  - unit: user.address.unit
+    required: False
+  - city: user.address.city
+  - state: user.address.state
+    code: |
+      states_list()
+    default: "MA"
+  - zip: user.address.zip
+---
+question: What is your telephone number?
+fields:
+  - no label: user.phone_number
+    maxlength: 10
+    minlength: 10
+---
+question: "What is your spouse's name and date of birth?"
+fields:
+  - First Name: defendant.name.first
+  - Middle Name: defendant.name.middle
+    required: False
+  - Last Name: defendant.name.last
+    help: |
+      On marriage certificate, look for "Surname After Marriage". This is your spouse's last name.
+  - Suffix: defendant.name.suffix
+    required: False
+    code: |
+      name_suffix()
+  - Date of Birth: defendant.birthdate
+    datatype: date
+right: |
+  ### Note
+    
+  Enter your spouse's **name exactly as it appears on your marriage certificate**. 
+  
+  Under your spouse's information on your marriage certificate, look at the box or line for **"Surname After Marriage"**. This is your spouse's current name.
+---
+question: |
+  What is your spouse's sex?
+fields: 
+  - Female: defendant.sex_female
+    datatype: yesno
+  - Male: defendant.sex_male
+    datatype: yesno
+  - Neither of the Above/Prefer Not to Answer: defendant.sex_no_answer
+    datatype: yesno
+---
+question: |
+  What are the last 4 digits of your spouse's Social Security Number?
+fields: 
+  - Last 4 Digits of SSN: defendant.ssn
+    datatype: integer
+    required: False
+    maxlength: 4
+    minlength: 4
+---
+question: |
+  Do you and your spouse still live together?
+yesno: still_live_together
+---
+question: |  
+  When did you and your spouse last live together?
+fields: 
+  - Date: last_lived_date
+    datatype: date
+---
+mandatory: True
+code: |
+  if still_live_together == False: 
+    last_lived_datePDF = last_lived_date
+  else:
+    last_lived_datePDF = 'Presently living together.'
+---
+question: |
+  Where did you and your spouse last live together?
+fields: 
+  - City: last_lived_city
+  - State: last_lived_state
+    code: |
+      states_list()
+    default: "MA"
+---
+code: |
+  if still_live_together == False:
+    last_lived_cityPDF = last_lived_city
+  else:
+    last_lived_cityPDF = user.address.address
+---
+mandatory: True
+code: |
+  if still_live_together == False:
+    last_lived_statePDF = last_lived_state
+  else:
+    last_lived_statePDF = ''
+---
+question: |
+  Do you know where your spouse lives?
+yesno: knows_spouse_lives
+---
+question: "What is your spouse's current or last known address?"
+fields:
+  - address: defendant.address.address
+    address autocomplete: True
+  - unit: defendant.address.unit
+    required: False
+  - city: defendant.address.city
+  - state: defendant.address.state
+    code: |
+      states_list()
+    default: "MA"
+  - zip: defendant.address.zip
+--- 
+code: |
+  if still_live_together == False:
+    defendant.address.address
+  else:
+    user.address.address
+---
+question: When were you and your spouse married?
+fields: 
+  - Date of marriage: marriage_date
+    datatype: date
+---
+question: Where were you and your spouse married?
+fields:
+  - City: marriage_city
+  - State: marriage_state
+    code: |
+      states_list()
+    default: "MA"
+Right: |
+
+  ### Note:
+  If you were married in a country other than the United States of America, please       list the the country name under "State".
+---
+question: When did your marriage become permanently broken?
+fields: 
+  - no label: breakdown_date
+    datatype: date
+---
+question: |
+  What number marriage is this for you? What number marriage is this for your spouse?
+fields: 
+  - Number Marriage for Me: user.number_marriage
+    datatype: integer
+  - Number Marrage for my Spouse: defendant.number_marriage
+    datatype: integer
+right: |
+   You probably can find this information on your marriage certificate.
+---
+objects:
+  - children: DAList.using(object_type = Individual, complete_attribute='complete')
+---
+code: |
+  children[i].name.first
+  children[i].birthdate
+  children[i].complete = True
+---
+code: |
+  dependent_children = children.filter('dependent_children', dependent=True)
+---
+question: |
+  Do you have any children?
+fields:
+  - no label: children.there_are_any
+    datatype: yesnoradio
+  - Number of Children in Your Custody: user.children_custody
+    datatype: integer
+    show if:
+      variable: 
+        children.there_are_any
+      is:
+        True
+  - Number of Children in Your Spouse's Custody: defendant.children_custody
+    datatype: integer
+    show if:
+      variable: 
+        children.there_are_any
+      is:
+        True
+---
+question: |
+  What is the name and birthdate of your ${ordinal(i)} child?
+fields:
+  - First: children[i].name.first
+  - Middle: children[i].name.middle
+    required: False
+  - Last: children[i].name.last
+  - Birthdate: children[i].birthdate
+    datatype: date
+  - Dependent: children[i].dependent
+    datatype: yesno
+    help: |
+     For help answering this question, read the information to the right.
+right: |
+  **Is your child dependent?** Generally, a child is considered dependent if, 
+  
+  1. The child is less than 18 years old;
+  
+  2. The child has turned 18 and is younger than 21 years old, lives in the home of a parent, and is principally dependent on that parent for maintenance;
+  
+  3. The child has turned 21 and is younger than 23 years old, lives in the home of a parent, and is principally dependent on that parent for maintenance because the child is enrolled in an educational program, excluding a program beyond an undergraduate degree.
+  
+  For more information, visit [Mass.gov](https://www.mass.gov/info-details/massachusetts-law-about-child-support-over-age-18).
+---
+question: |
+  Do you have any other children?
+yesno: children.there_is_another
+---
+objects:
+  - previous_action: DAList.using(object_type = Thing, complete_attribute='complete')
+---
+code: |
+  previous_action[i].docket
+  previous_action[i].court
+  previous_action[i].type
+  previous_action[i].status
+  previous_action[i].complete = True
+---
+question: |
+    Have you or your spouse ever filed another case against the other?
+yesno: previous_action.there_are_any
+right: |
+  ### Note
+    
+  Select 'Yes' if any of the following have ever been filed by one of you against the other.
+  
+  * Divorce
+  * Child Custody
+  * Separate Support, ex. child support or alimony
+  * Annulment
+  * Living Apart for Justifiable Cause
+  * Desertion
+  * Affirmation of Marriage
+---
+question: |
+  Please provide the following information for the ${ ordinal(i) } case?
+fields:
+  - Docket Number: previous_action[i].docket
+  - Court: previous_action[i].court
+    choices:
+      - Barnstable Probate & Family Court
+      - Berkshire Probate & Family Court
+      - Bristol Probate & Family Court
+      - Dukes Probate & Family Court
+      - Essex Probate & Family Court
+      - Franklin Probate & Family Court
+      - Hampden Probate & Family Court
+      - Hampshire Probate & Family Court
+      - Middlesex Probate & Family Court
+      - Nantucket Probate & Family Court
+      - Norfolk Probate & Family Court
+      - Plymouth Probate & Family Court
+      - Suffolk Probate & Family Court
+      - Worcester Probate & Family Court
+  - Type of Case: previous_action[i].type
+    choices:
+      - Divorce
+      - Separate Support
+      - Annulment
+      - Affirmation of Marriage
+      - Desertion
+      - Living Apart for Justifiable Cause
+      - Child Custody 
+  - Case Status: previous_action[i].status
+    choices:
+      - Active
+      - Closed
+      - Dismissed
+---
+question: |
+  Have you or your spouse ever filed another one of those cases against the other?
+yesno: previous_action.there_is_another
+---
+question: |
+  Do you agree with the following statement, 
+  > I want the court to grant me a divorce because my marriage is irretrievably broken.
+fields: 
+- no label: grant_divorce
+  datatype: yesnoradio
+  default: True
+right: |
+  ### Note
+    
+  If you want to continue with this type of divorce, click 'Yes'. For this type of case, you **must** ask the court to grant the divorce because of the irretrievable breakdown. 
+---
+question: 
+  "Would you like the court to grant custody of you and your spouse's minor or dependent children?"
+fields:
+  - no label: grant_custody
+    datatype: yesnoradio
+  - Grant custody to me: plaintiff_custody
+    datatype: yesnoradio
+    show if:
+      variable: 
+        grant_custody
+      is:
+        True
+  - Grant custody to my spouse: defendant_custody
+    datatype: yesnoradio
+    show if:
+      variable: 
+        grant_custody
+      is:
+        True
+right: |
+  ### Note
+    
+  You can ask the court to give custody only to you, only to your spouse, or to both of you. 
+  
+  There are two types of custody: legal and physical. Click the 'Help' button in the toolbar above to learn more. 
+help:
+  content: |
+    There are two type of legal custody: 1) legal custody; and, 2) physical custody. Legal custody allows the parent to make major decisions about the child (for example, related to school, medical and religious issues. Physical custody determines who the child primarily lives with.
+    
+    **It is important** that you understand the differences between the two, and what you can ask the court to order. To learn more, visit [MassLegalHelp](https://www.masslegalhelp.org/domestic-violence/wdwgfh/chapter7-custody).
+---
+question: |
+  Would you like the court to order that your spouse cannot restrain your personal liberty?
+yesno: plaintiff_liberty
+---
+question: |
+  Would you like the court to grant alimony and/or child support?
+fields:
+  - no label: grant_support
+    datatype: yesnoradio
+  - Order alimony: plaintiff_support
+    datatype: yesnoradio
+    show if:
+      variable: 
+        grant_support
+      is:
+        True
+  - Order child support: child_support
+    datatype: yesnoradio
+    show if:
+      variable: 
+        grant_support
+      is:
+        True
+right: |
+  **Alimony** is money one spouse pays to the other spouse. Alimony is not available in every case. To learn more, visit [MassLegalHelp](https://www.masslegalhelp.org/children-and-families/divorce/alimony).
+  
+  **Child support** is money one spouse pays to the other spouse for the care of their children. To learn more, visit [MassLegalHelp](https://www.masslegalhelp.org/children-and-families/child-support).
+---
+question: |
+  Do you want to resume your former last name?
+fields:
+  - no label: resume_former_name
+    datatype: yesnoradio
+  - Insert Former Last Name: plaintiff_former_name
+    show if:
+      variable: 
+        resume_former_name
+      is:
+        True
+---
+question: |
+  Do you want the court to offer any other form of relief?
+fields:
+  - no label: other_relief
+    datatype: yesnoradio
+  - What else do you want the court to order?: type_relief_sought
+    show if:
+      variable: 
+        other_relief
+      is:
+        True
+---
+question: |
+  Do you want the court to convey any real estate?
+fields:
+  - no label: convey_real_estate
+    datatype: yesnoradio
+  - Where is the real estate located?: real_estate_location
+    address autocomplete: True
+    show if:
+      variable: 
+        convey_real_estate
+      is:
+        True
+  - Enter the name of the owner(s)?: real_estate_title_holder
+    show if:
+      variable: 
+        convey_real_estate
+      is:
+        True
+  - What Registry of Deeds?: registry_deeds
+    show if:
+      variable: 
+        convey_real_estate
+      is:
+        True
+  - What Registry of Deeds book?: registry_book
+    show if:
+      variable: 
+        convey_real_estate
+      is:
+        True
+  - What Registry of Deeds page?: registry_page
+    show if:
+      variable: 
+        convey_real_estate
+      is:
+        True
+---
+question: |
+  Would you like to have today's date on your complaint for divorce, or should we leave the date line blank so you can fill it in later?
+fields: 
+  - no label: complaint_date
+    datatype: checkboxes
+    choices:
+      - "Today's Date": date_today
+      - Leave Date Blank: no_date
+    none of the above: False
+---
+question: |
+  What county are you filing in?
+fields: 
+ - no label: county
+   choices:
+      - Barnstable
+      - Berkshire
+      - Bristol
+      - Dukes
+      - Essex
+      - Franklin
+      - Hampden
+      - Hampshire
+      - Middlesex
+      - Nantucket
+      - Norfolk
+      - Plymouth
+      - Suffolk
+      - Worcester
+---
+mandatory: True
+question: |
+  Are you actively serving in the military?
+yesno: user.military_service
+---
+mandatory: True
+question: |
+  Is your spouse actively serving in the military?
+yesnomaybe: defendant.military_service
+---
+mandatory: True
+question: |
+  Below, please explain your selections. For example, you can:
+  
+  * Write whether you know that neither you nor your spouse are in the military.
+  * If you or your spouse are in the military, you can give details about you or your spouse's service. 
+fields: 
+  - no label: explain_service
+    datatype: area
+---
+mandatory: True
+progress: 100
+question: |
+  Here are your documents!
+subquestion: |
+  ${ Military_Affidavit }
+  ${ R_408 }
+  ${ Divorce_PDF } 
+attachment code: |
+  [Divorce_PDF, Military_Affidavit, R_408]
+---
+question: | 
+  Here is your PDF form
+attachment:
+  name: A filled-in form
+  filename: Divorce_PDF
+  pdf template file: 1B_Template_PDF.pdf
+  variable name: Divorce_PDF
+  fields:
+    - County: |
+        ${ county }
+    - Your Name: |
+        ${ user }
+    - Spouse Name: |
+        ${ defendant }
+    - Your Street Address: |
+        ${ user.address.address }
+    - Your Unit: |
+        ${ user.address.unit }
+    - Your City: |
+        ${ user.address.city }
+    - Your County: |
+        ${ user.address.county }
+    - Your State: |
+        ${ user.address.state }
+    - Your Zip: |
+        ${ user.address.zip }
+    - Your Telephone Number: |
+        ${ user.phone_number}
+    - Defendant Street Address: |
+        ${ user.address.address if still_live_together else "Parts Unknown/LKA: " + defendant.address.address if not knows_spouse_lives else defendant.address.address}
+    - Defendant Unit: |
+        ${ defendant.address.unit if not still_live_together else user.address.unit }
+    - Defendant City: |
+        ${ defendant.address.city if not still_live_together else user.address.city }
+    - Defendant County: |
+        ${ defendant.address.county if not still_live_together else user.address.county }
+    - Defendant State: |
+        ${ defendant.address.state if not still_live_together else user.address.state }
+    - Defendant Zip: |
+        ${ defendant.address.zip if not still_live_together else user.address.zip }
+    - Dependent Child 1: |
+        ${ dependent_children.item(0) }
+    - Dependent Child 1 DOB: |
+        ${ dependent_children.item(0).birthdate }
+    - Dependent Child 2: |
+        ${ dependent_children.item(1) }
+    - Dependent Child 2 DOB: |
+        ${ dependent_children.item(1).birthdate }
+    - Dependent Child 3: |
+        ${ dependent_children.item(2)}
+    - Dependent Child 3 DOB: |
+        ${ dependent_children.item(2).birthdate }
+    - Dependent Child 4: |
+        ${ dependent_children.item(3) }
+    - Dependent Child 4 DOB: |
+        ${ dependent_children.item(3).birthdate }
+    - Marriage City: |
+        ${ marriage_city }
+    - Marriage State: |
+        ${ marriage_state }
+    - Marriage Date: |
+        ${ marriage_date }
+    - City Last Lived Together: |
+        ${ last_lived_cityPDF if not still_live_together else user.address.city }
+    - State Last Lived Together: |
+        ${ last_lived_statePDF if not still_live_together else user.address.state }
+    - Date Last Lived Together: |
+        ${ last_lived_datePDF if not still_live_together else 'Presently living together' }
+    - Breakdown Date: |
+        ${ breakdown_date }
+    - Previous Action 1 Docket No: |
+        ${ previous_action.item(0).docket }
+    - Previous Action 1 Court: |
+        ${ previous_action.item(0).court }
+    - Previous Action 1 Case Type: |
+        ${ previous_action.item(0).type }
+    - Previous Action 1 Status: |
+        ${ previous_action.item(0).status }
+    - Previous Action 2 Docket No: |
+        ${ previous_action.item(1).docket }
+    - Previous Action 2 Court: |
+        ${ previous_action.item(1).court }
+    - Previous Action 2 Case Type: |
+        ${ previous_action.item(1).type }
+    - Previous Action 2 Status: |
+        ${ previous_action.item(1).status }
+    - Divorce Checkbox: |
+        ${ grant_divorce }
+    - General Custody Checkbox: |
+        ${ grant_custody if children.there_are_any else '' }
+    - Plaintiff Custody Checkbox: |
+        ${ showifdef('plaintiff_custody')}
+    - Defendant Custody Checkbox: |
+        ${ showifdef('defendant_custody')}
+    - Plaintiff Liberty Checkbox: |
+        ${ plaintiff_liberty }
+    - General Support Checkbox: |
+        ${ grant_support }
+    - Plaintiff Support Checkbox: |
+        ${ showifdef('plaintiff_support')}
+    - Child Support Checkbox: |
+        ${ showifdef('child_support')}
+    - Former Name Checkbox: |
+        ${ resume_former_name }
+    - Plaintiff Former Name: |
+        ${ showifdef('plaintiff_former_name')}
+    - Other Relief Checkbox: |
+        ${ other_relief }
+    - Other Relief Sought: |
+        ${ type_relief_sought if other_relief else '' }
+    - Date: |
+        ${ today() if complaint_date['date_today'] else '' }
+    - Convey Real Estate Checkbox: |
+        ${ convey_real_estate }
+    - Real Estate Location: |
+        ${ showifdef('real_estate_location')}
+    - Real Estate Title Holder: |
+        ${ showifdef('real_estate_title_holder')}
+    - Registry of Deeds: |
+        ${ showifdef('registry_deeds')}
+    - Registry Book: |
+        ${ showifdef('registry_book')}
+    - Registry Page: |
+        ${ showifdef('registry_page')}
+---
+attachment:
+  name: The second document
+  filename: Military_Affidavit
+  pdf template file: Military_Affidavit.pdf
+  description: |
+    This is the second document
+    of a series.
+  variable name: Military_Affidavit
+  fields: 
+    - County: |
+        ${ county }
+    - Your Name: |
+        ${ user }
+    - Spouse Name: |
+        ${ defendant }
+    - Service Your Name: |
+        ${ user if user.military_service else ''}
+    - Service Spouse Name: |
+        ${ defendant if defendant.military_service else ''}
+    - Service Not Your Name: |
+        ${ user if not user.military_service else ''}
+    - Service Not Spouse Name: |
+        ${ defendant if not defendant.military_service else ''}
+    - Service Unsure Spouse Name: |
+        ${ defendant if defendant.military_service is None else '' }
+    - Service Checkbox: |
+        ${ defendant.military_service or user.military_service }
+    - Not Service Checkbox: |  
+        ${ not defendant.military_service or not user.military_service }
+    - Unsure Service Checkbox: |
+        ${ defendant.military_service is None }
+    - Explain Service: |
+        ${ explain_service }
+    - Date: |
+        ${ today() if complaint_date['date_today'] else '' }
+---
+attachment:
+  skip undefined: True
+  name: The third document
+  filename: R_408
+  pdf template file: R-408.pdf
+  description: |
+    This is the third document
+    of a series.
+  variable name: R_408
+  fields: 
+    - County: |
+        ${ county }
+    - Marriage Date: |
+        ${ marriage_date }
+    - State or Country of Marriage: |
+        ${ marriage_state }
+    - Your First Name: |
+        ${ user.name.first }
+    - Your Middle Name: |
+        ${ user.name.middle }
+    - Your Last Name: |
+        ${ user.name.last}
+    - Your Surname Upon Divorce: |
+        ${ plaintiff_former_name if resume_former_name else user.name.last}
+    - Your Surname at Birth or Adoption: |
+        ${ user.birth_surname if user.birth_surname_different else user.name.last }
+    - Your Date of Birth: |
+        ${ user.birthdate }
+    - Last 4 SSN: |  
+        ${ user.ssn }
+    - Number of This Marriage: |
+        ${ user.number_marriage }
+    - Number of Minor Children in Your Custody: |
+        ${ user.children_custody if children.there_are_any else '0' }
+    - Your Street Address: |
+        ${ user.address.address }
+    - Your Unit Number: |
+        ${ user.address.unit }
+    - Your City/Town: |
+        ${ user.address.city }
+    - Your State/Country: |
+        ${ user.address.state }
+    - Your Zip Code: |
+        ${ user.address.zip }
+    - Spouse First Name: |
+        ${ defendant.name.first }
+    - Spouse Middle Name: |
+        ${ defendant.name.middle }
+    - Spouse Last Name: |
+        ${ defendant.name.last }
+    - Spouse Date of Birth: |
+        ${ defendant.birthdate }
+    - Spouse Last 4 SSN: |
+        ${ defendant.ssn }
+    - Spouse Number of Marriage: |
+        ${ defendant.number_marriage }
+    - Spouse Number of Minor Children in Custody: |
+        ${ defendant.children_custody if children.there_are_any else '0' }
+    - Spouse Street Address: |
+        ${ defendant.address.address }
+    - Spouse Unit Number: |
+        ${ defendant.address.unit }
+    - Spouse City/Town: |
+        ${ defendant.address.city }
+    - Spouse State/Country: |
+        ${ defendant.address.state }
+    - Spouse Zip Code: |
+        ${ defendant.address.zip }
+    - User Female Checkbox: |
+        ${ user.sex_female }
+    - User Male Checkbox: |
+        ${ user.sex_male }
+    - Spouse Female Checkbox: |
+        ${ defendant.sex_female }
+    - Spouse Male Checkbox: |
+        ${ defendant.sex_male }
+    - Child 0 First Name: |
+        ${ children.item(0).name.first } 
+    - Child 1 First Name: |
+        ${ children.item(1).name.first } 
+    - Child 2 First Name: |
+        ${ children.item(2).name.first } 
+    - Child 3 First Name: | 
+        ${ children.item(3).name.first } 
+    - Child 4 First Name: |
+        ${ children.item(4).name.first } 
+    - Child 0 Middle Name: |
+        ${ children.item(0).name.middle } 
+    - Child 1 Middle Name: |
+        ${ children.item(1).name.middle } 
+    - Child 2 Middle Name: |
+        ${ children.item(2).name.middle } 
+    - Child 3 Middle Name: |
+        ${ children.item(3).name.middle } 
+    - Child 4 Middle Name: |
+        ${ children.item(4).name.middle } 
+    - Child 0 Last Name: |
+        ${ children.item(0).name.last } 
+    - Child 1 Last Name: |
+        ${ children.item(1).name.last } 
+    - Child 2 Last Name: |
+        ${ children.item(2).name.last } 
+    - Child 3 Last Name: |
+        ${ children.item(3).name.last } 
+    - Child 4 Last Name: |
+        ${ children.item(4).name.last } 
+    - DOB Child 0: |
+        ${ children.item(0).birthdate }
+    - DOB Child 1: |
+        ${ children.item(1).birthdate }
+    - DOB Child 2: |
+        ${ children.item(2).birthdate }
+    - DOB Child 3: |
+        ${ children.item(3).birthdate }
+    - DOB Child 4: |
+        ${ children.item(4).birthdate }
+    - Child 5 Full Name: |
+        ${ children.item(5) } 
+    - Child 6 Full Name: |
+        ${ children.item(6) } 
+    - Child 7 Full Name: |
+        ${ children.item(7) } 
+    - Child 5 DOB: |
+        ${ children.item(5).birthdate }
+    - Child 6 DOB: |
+        ${ children.item(6).birthdate }
+    - Child 7 DOB: |
+        ${ children.item(7).birthdate }
+    - Total Number Children: |
+        ${ len(children) }
+---
+attachment:
+  name: The fourth document
+  filename: Motion_for_Alternate_Service
+  pdf template file: Motion_for_Alternate_Service.pdf
+  description: |
+    This is the fourth document
+    of a series.
+  variable name: Motion_for_Alternate_Service
+  fields: 
+    - County: |
+        ${ county }
+    - Your Name: |
+        ${ user }
+    - Spouse Name: |
+        ${ defendant }
+    - Spouse Address: |
+        ${ defendant.address }
+    - Your Street: |
+        ${ user.address.address }
+    - Your Unit: |
+        ${ user.address.unit }
+    - Your City: |
+        ${ user.address.city }
+    - Your State: |
+        ${ user.address.state }
+    - Your Zip: |
+        ${ user.address.zip }
+    - Your Telephone Number: |
+        ${ user.phone_number }
+    - Spouse Street Address: |
+        ${ defendant.address.address }
+    - Spouse Unit: |
+        ${ defendant.address.unit }
+    - Spouse State: |
+        ${ defendant.address.state }
+    - Spouse City: |
+        ${ defendant.address.city }
+    - Spouse Zip: |
+        ${ defendant.address.zip }
+---
+question: |
+  Here is your document.
+attachment:
+  name: 1B_Addendum
+  filename: 1B_Addendum
+  variable name: Addendum1B
+  docx template file: 1B_Addendum.docx
+  valid formats:
+    - pdf
+    - docx
+---
